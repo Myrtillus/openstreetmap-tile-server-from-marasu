@@ -1,41 +1,54 @@
 # openstreetmap-tile-server
 
-This container allows you to easily set up an OpenStreetMap PNG tile server given a `.osm.pbf` file. It is based on the [latest Ubuntu 18.04 LTS guide](https://switch2osm.org/manually-building-a-tile-server-18-04-lts/) from [switch2osm.org](https://switch2osm.org/) and therefore uses the default OpenStreetMap style.
+This container image allows you to easily set up an OpenStreetMap PNG tile server given a `.osm.pbf` file. Default OSM-file is Finland-latest from [geofabrik.de](https://www.geofabrik.de).
+Image is based on the [latest Ubuntu 18.04 LTS guide](https://switch2osm.org/manually-building-a-tile-server-18-04-lts/) from [switch2osm.org](https://switch2osm.org/) and uses 
+a [custom CartoCSS style](https://github.com/Myrtillus/openstreetmap-carto) developed for mapping of mountain bike trails in Finland.
 
 ## Setting up the server
 
-First create a Docker volume to hold the PostgreSQL database that will contain the OpenStreetMap data:
+Unless you want to use Finland-latest OSM-data then first download an .osm.pbf extract from geofabrik.de for the region that you're interested in. You can then start importing it into PostgreSQL by running a container and mounting the file as `/data.osm.pbf`. For example:
 
-    docker volume create openstreetmap-data
+    docker run -v /absolute/path/to/luxembourg.osm.pbf:/data.osm.pbf -v openstreetmap-data:/var/lib/postgresql/10/main marasu/openstreetmap-tile-server import
 
-Next, download an .osm.pbf extract from geofabrik.de for the region that you're interested in. You can then start importing it into PostgreSQL by running a container and mounting the file as `/data.osm.pbf`. For example:
+If the container exits without errors, then your data has been successfully imported to PostGIS database and you are now ready to run the tile server. A Docker volume `openstreetmap-data` is created
+in the import process.
 
-    docker run -v /absolute/path/to/luxembourg.osm.pbf:/data.osm.pbf -v openstreetmap-data:/var/lib/postgresql/10/main overv/openstreetmap-tile-server import
-
-If the container exits without errors, then your data has been successfully imported and you are now ready to run the tile server.
-
-## Running the server
+## Running the tile server
 
 Run the server like this:
 
-    docker run -p 80:80 -v openstreetmap-data:/var/lib/postgresql/10/main -d overv/openstreetmap-tile-server run
+    docker run -p 80:80 -v openstreetmap-data:/var/lib/postgresql/10/main -d marasu/openstreetmap-tile-server run
 
-Your tiles will now be available at http://localhost:80/tile/{z}/{x}/{y}.png. If you open `leaflet-demo.html` in your browser, you should be able to see the tiles served by your own machine. Note that it will initially quite a bit of time to render the larger tiles for the first time.
+Your tiles will now be available at http://localhost:80/tile/{z}/{x}/{y}.png. If you open `leaflet-demo.html` in your browser, you should be able to see the tiles served by your own machine. Note that it will initially quite a bit of time to render the larger tiles at low zoom level for the first time.
 
 ## Preserving rendered tiles
 
-Tiles that have already been rendered will be stored in `/var/lib/mod_tile`. To make sure that this data survives container restarts, you should create another volume for it:
+Tiles that have already been rendered will be stored in `/var/lib/mod_tile`. To make sure that this data survives container restarts, you can run the server instead with command:
 
-    docker volume create openstreetmap-rendered-tiles
-    docker run -p 80:80 -v openstreetmap-data:/var/lib/postgresql/10/main -v openstreetmap-rendered-tiles:/var/lib/mod_tile -d overv/openstreetmap-tile-server run
+    docker run -p 80:80 -v openstreetmap-data:/var/lib/postgresql/10/main -v openstreetmap-rendered-tiles:/var/lib/mod_tile -d marasu/openstreetmap-tile-server run
+
+A Docker volume `openstreetmap-rendered-tiles` is created and used for storing of rendered tiles.
 
 ## Performance tuning
 
-The import and tile serving processes use 4 threads by default, but this number can be changed by setting the `THREADS` environment variable. For example:
+The import and tile serving processes use 4 threads by default, but this number can be changed by setting the `THREADS` environment variable. Node memory for optimising OSM-data import can be set with
+`NODEMEM`enviroment variable, default is 2048 (MB). For example:
 
-    docker run -p 80:80 -e THREADS=24 -v openstreetmap-data:/var/lib/postgresql/10/main -d overv/openstreetmap-tile-server run
+    docker run -p 80:80 -e THREADS=24 -e NODEMEM=8192 -v openstreetmap-data:/var/lib/postgresql/10/main -d marasu/openstreetmap-tile-server run
+
+## Updating OSM-data
+
+Updating OSM-data with current version of this container image is easiest done by first stopping the running container, deleting both docker volumes `openstreetmap-data` and `openstreetmap-rendered-tiles` and then running the server setup (OSM-data import to PostGIS database) again and starting the tile server.
+
+## To be done
+
+- [ ] Pre-rendering (pre-warming mod_tile cache) user configurable sections of map after OSM-data import for better user experience
+- [ ] Supporting multiple CartoCSS styles are different tileserver URIs
+- [ ] Separate all `apt install`s in Dockerfile for better documentation for what is needed for which server component
 
 ## License
+
+Original work in https://github.com/Overv/openstreetmap-tile-server, this fork is heavily modified.
 
 ```
 Copyright 2018 Alexander Overvoorde
