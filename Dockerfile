@@ -75,9 +75,8 @@ USER renderer
 
 # Configure stylesheet
 WORKDIR /home/renderer/src
-RUN git clone https://github.com/myrtillus/openstreetmap-carto.git
+RUN git clone -b pkk_summer https://github.com/myrtillus/openstreetmap-carto.git
 WORKDIR /home/renderer/src/openstreetmap-carto
-RUN git checkout pkk_summer
 RUN wget -nv https://raw.githubusercontent.com/Myrtillus/osm2pgsql_style/master/pkk_maps.style
 RUN carto -v
 RUN carto project.mml > mapnik.xml
@@ -89,5 +88,7 @@ RUN ./get-shapefiles.sh
 # Start running
 USER root
 COPY run.sh /
+COPY pre_render.py /usr/local/bin/
+RUN chmod a+x /usr/local/bin/pre_render.py
 ENTRYPOINT ["/run.sh"]
 CMD []
