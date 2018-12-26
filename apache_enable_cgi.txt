@@ -1,0 +1,6 @@
+
+<Directory /var/www/html/health>
+        Options +ExecCGI
+        AddHandler cgi-script .py
+				DirectoryIndex healthcheck.py
+</Directory>

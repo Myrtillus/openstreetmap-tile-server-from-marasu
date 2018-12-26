@@ -7,8 +7,8 @@ import subprocess
 import math
 
 # Default number of rendering threads to spawn, should be roughly equal to number of CPU cores available
-NUM_THREADS = 12
-MAP_DEFAULT_NAME = 'ajt'
+NUM_THREADS = 24
+MAP_DEFAULT_NAME = 'pkk'
 
 def deg2num(lat_deg, lon_deg, zoom):
   lat_rad = math.radians(lat_deg)
@@ -39,6 +39,7 @@ def render_tiles(bbox, minZoom=1, maxZoom=18, num_threads=NUM_THREADS, map_name=
 	for zoom in range(minZoom, maxZoom + 1):
 		res = render_tiles_per_zoom(bbox, zoom)
 		print res
+
 
 # World
 bbox = (-179.0, -85, 179.0, 85.0)

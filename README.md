@@ -19,7 +19,7 @@ Run the server like this:
 
     docker run -p 80:80 -v openstreetmap-data:/var/lib/postgresql/10/main -d marasu/openstreetmap-tile-server run
 
-Your tiles will now be available at http://localhost:80/tile/{z}/{x}/{y}.png. If you open `leaflet-demo.html` in your browser, you should be able to see the tiles served by your own machine. Note that it will initially quite a bit of time to render the larger tiles at low zoom level for the first time.
+Your tiles will now be available at http://localhost:80/tiles/{z}/{x}/{y}.png and winter version at http://localhost:80/tiles_winter/{z}/{x}/{y}.png. If you open `leaflet-demo.html` in your browser, you should be able to see the tiles served by your own machine. Note that it will initially quite a bit of time to render the larger tiles at low zoom level for the first time.
 
 ## Preserving rendered tiles
 
@@ -32,23 +32,29 @@ A Docker volume `openstreetmap-rendered-tiles` is created and used for storing o
 ## Performance tuning
 
 The import and tile serving processes use 4 threads by default, but this number can be changed by setting the `THREADS` environment variable. Node memory for optimising OSM-data import can be set with
-`NODEMEM`enviroment variable, default is 2048 (MB). For example:
+`NODEMEM` enviroment variable, default is 2048 (MB). For example:
 
     docker run -p 80:80 -e THREADS=24 -e NODEMEM=8192 -v openstreetmap-data:/var/lib/postgresql/10/main -d marasu/openstreetmap-tile-server run
+
+Server can be started with `run-fresh` command instead of `run` to enable pre-rendering a set of tiles defined in `pre_render.py` script. Pre-rendering is done as a background task allowing server to accept incoming tile requests immediately after starting the container.
 
 ## Updating OSM-data
 
 Updating OSM-data with current version of this container image is easiest done by first stopping the running container, deleting both docker volumes `openstreetmap-data` and `openstreetmap-rendered-tiles` and then running the server setup (OSM-data import to PostGIS database) again and starting the tile server.
 
+## Healthcheck
+
+URI /health will return `OK` if tileserver is responding to a healthcheck which is currently a few tile requests to server.
+
 ## To be done
 
-- [ ] Pre-rendering (pre-warming mod_tile cache) user configurable sections of map after OSM-data import for better user experience
-- [ ] Supporting multiple CartoCSS styles are different tileserver URIs
 - [ ] Separate all `apt install`s in Dockerfile for better documentation for what is needed for which server component
 
 ## License
 
-Original work in https://github.com/Overv/openstreetmap-tile-server, this fork is heavily modified.
+Original work in https://github.com/Overv/openstreetmap-tile-server, this fork is heavily modified and extended.
+
+Original copyright:
 
 ```
 Copyright 2018 Alexander Overvoorde

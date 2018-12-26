@@ -51,12 +51,6 @@ RUN make install-mod_tile
 RUN ldconfig
 USER renderer
 
-# Configure renderd
-USER root
-RUN sed -i 's/renderaccount/renderer/g' /usr/local/etc/renderd.conf
-RUN sed -i 's/hot/tile/g' /usr/local/etc/renderd.conf
-USER renderer
-
 # Configure Apache
 USER root
 RUN mkdir /var/lib/mod_tile
@@ -73,22 +67,43 @@ USER root
 RUN npm install -g carto
 USER renderer
 
-# Configure stylesheet
+# Configure stylesheets
 WORKDIR /home/renderer/src
-RUN git clone -b pkk_summer https://github.com/myrtillus/openstreetmap-carto.git
-WORKDIR /home/renderer/src/openstreetmap-carto
+RUN git clone -b pkk_summer https://github.com/myrtillus/openstreetmap-carto.git pkk_summer
+RUN git clone https://github.com/myrtillus/pkk_winter_2014.git pkk_winter
+WORKDIR /home/renderer/src/pkk_summer
+RUN wget -nv https://raw.githubusercontent.com/Myrtillus/osm2pgsql_style/master/pkk_maps.style
+RUN carto -v
+RUN carto project.mml > mapnik.xml
+WORKDIR /home/renderer/src/pkk_winter
 RUN wget -nv https://raw.githubusercontent.com/Myrtillus/osm2pgsql_style/master/pkk_maps.style
 RUN carto -v
 RUN carto project.mml > mapnik.xml
 
 # Load shapefiles
-WORKDIR /home/renderer/src/openstreetmap-carto
+WORKDIR /home/renderer/src/pkk_summer
+RUN ./get-shapefiles.sh
+WORKDIR /home/renderer/src/pkk_winter
+RUN chmod +x get-shapefiles.sh
 RUN ./get-shapefiles.sh
 
-# Start running
+# Copy config files
 USER root
 COPY run.sh /
 COPY pre_render.py /usr/local/bin/
+COPY renderd.conf /usr/local/etc/
 RUN chmod a+x /usr/local/bin/pre_render.py
+COPY index.html /var/www/html/
+
+# Add healthcheck script to Apache at /health
+COPY healthcheck.py /var/www/html/health/
+RUN chmod a+x /var/www/html/health/healthcheck.py
+COPY apache_enable_cgi.txt /etc/apache2/
+RUN cat /etc/apache2/apache_enable_cgi.txt >> /etc/apache2/apache2.conf
+WORKDIR /etc/apache2/mods-enabled
+RUN ln -s ../mods-available/cgid.conf .
+RUN ln -s ../mods-available/cgid.load .
+
+# Entrypoint 
 ENTRYPOINT ["/run.sh"]
 CMD []
