@@ -1,1 +1,3 @@
 .vscode
+*.osm.pbf
+test.py

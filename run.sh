@@ -61,6 +61,7 @@ if [ "$1" = "run-fresh" ]; then
 
     # Clean cache & start pre-rendering as a background job
     rm -rf /var/lib/mod_tile/*
+    touch /var/lib/mod_tile/planet-import-complete
     sleep 20 && sudo -u renderer /usr/local/bin/pre_render.py &
 
     # Run

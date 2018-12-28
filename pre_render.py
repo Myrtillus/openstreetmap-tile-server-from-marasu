@@ -24,7 +24,7 @@ def render_tiles_per_zoom(bbox, zoom, map_name=MAP_DEFAULT_NAME, num_threads=NUM
 	(minX, minY) = deg2num(bbox[3], bbox[0], zoom)
 	(maxX, maxY) = deg2num(bbox[1], bbox[2], zoom)
 
-	render_cmd_args = 'render_list -a -m %s -x %s -y %s -X %s -Y %s -z %s -Z %s -n %s' \
+	render_cmd_args = 'render_list -a -f -m %s -x %s -y %s -X %s -Y %s -z %s -Z %s -n %s' \
             % (map_name,
                minX, minY,
                maxX, maxY,
