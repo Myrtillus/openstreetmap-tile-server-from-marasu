@@ -21,6 +21,12 @@ RUN apt-get update && apt-get install -y libboost-all-dev git-core tar unzip wge
 	npm nodejs curl
 USER renderer
 
+# Kubernetes hack, because emptydir-volume does not copy existing data from image
+USER root
+RUN mv /var/lib/postgresql/10/main /var/lib/postgresql/10/main2
+RUN mkdir /var/lib/postgresql/10/main
+USER renderer
+
 # Install latest osm2pgsql
 RUN mkdir /home/renderer/src
 WORKDIR /home/renderer/src

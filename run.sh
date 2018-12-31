@@ -12,6 +12,11 @@ if [ "$#" -ne 1 ]; then
 fi
 
 if [ "$1" = "import" ]; then
+    # Kubernetes emptydir-volume hack
+    mv /var/lib/postgresql/10/main2/* /var/lib/postgresql/10/main/
+    chown -R postgres:postgres /var/lib/postgresql/10/main
+    chmod 700 /var/lib/postgresql/10/main
+
     # Initialize PostgreSQL
     service postgresql start
     sudo -u postgres createuser renderer
@@ -28,6 +33,7 @@ if [ "$1" = "import" ]; then
     fi
 
     # Import data
+    # Tried using --drop: db size dropped to 1/3 however rendering slowed down dramatically
     exec sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore -C ${NODEMEM:-2048} --number-processes ${THREADS:-4} -S /home/renderer/src/pkk_summer/pkk_maps.style /data.osm.pbf
 
     exit 0
@@ -42,6 +48,8 @@ if [ "$1" = "run" ]; then
 
     # Configure renderd threads
     sed -i -E "s/num_threads=[0-9]+/num_threads=${THREADS:-4}/g" /usr/local/etc/renderd.conf
+
+    # Kubernetes hack needed or a way to recover if container crashes?
 
     # Run
     exec sudo -u renderer renderd -f -c /usr/local/etc/renderd.conf
@@ -59,9 +67,15 @@ if [ "$1" = "run-fresh" ]; then
     # Configure renderd threads
     sed -i -E "s/num_threads=[0-9]+/num_threads=${THREADS:-4}/g" /usr/local/etc/renderd.conf
 
-    # Clean cache & start pre-rendering as a background job
+    # Clean cache, only for Docker named volume 
     rm -rf /var/lib/mod_tile/*
+    
+    # Kubernetes emptydir volume hack
     touch /var/lib/mod_tile/planet-import-complete
+    chown -R renderer:renderer /var/lib/mod_tile
+    chmod a+r /var/lib/mod_tile/planet-import-complete
+    
+    # Start pre-rendering as a background job
     sleep 20 && sudo -u renderer /usr/local/bin/pre_render.py &
 
     # Run

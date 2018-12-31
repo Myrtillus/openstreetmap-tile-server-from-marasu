@@ -42,6 +42,8 @@ Server can be started with `run-fresh` command instead of `run` to enable pre-re
 
 Updating OSM-data with current version of this container image is easiest done by first stopping the running container, deleting both docker volumes `openstreetmap-data` and `openstreetmap-rendered-tiles` and then running the server setup (OSM-data import to PostGIS database) again and starting the tile server.
 
+Updating can be done also automatically with `deployment.py` script which does a healthcheck for the new data (and container) before launching it to replace the old container.
+
 ## Healthcheck
 
 URI /health will return `OK` if tileserver is responding to a healthcheck which is currently a few tile requests to server.
