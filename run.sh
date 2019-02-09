@@ -3,7 +3,7 @@
 if [ "$#" -ne 1 ]; then
     echo "usage: <import|run>"
     echo "commands:"
-    echo "    import: Set up the database and import /data.osm.pbf"
+    echo "    import: Set up the database and import /osm-data/data.osm.pbf"
     echo "    run: Runs Apache and renderd to serve tiles at /tile/{z}/{x}/{y}.png"
     echo "environment variables:"
     echo "    THREADS: defines number of threads used for importing / tile rendering"
@@ -28,14 +28,15 @@ if [ "$1" = "import" ]; then
     sudo -u postgres psql -d gis -c "ALTER TABLE spatial_ref_sys OWNER TO renderer;"
 
     # Download Finland if no data is provided
-    if [ ! -f /data.osm.pbf ]; then
+    if [ ! -f /osm-data/data.osm.pbf ]; then
         echo "WARNING: No import file at /data.osm.pbf, so importing Finland as default..."
-        wget -nv http://download.geofabrik.de/europe/finland-latest.osm.pbf -O /data.osm.pbf
+        mkdir -p /osm-data
+        wget -nv http://download.geofabrik.de/europe/finland-latest.osm.pbf -O /osm-data/data.osm.pbf
     fi
 
     # Import data
     # Tried using --drop: db size dropped to 1/3 however rendering slowed down dramatically
-    exec sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore -C ${NODEMEM:-2048} --number-processes ${THREADS:-4} -S /home/renderer/src/pkk_summer/pkk_maps.style /data.osm.pbf
+    exec sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore -C ${NODEMEM:-2048} --number-processes ${THREADS:-4} -S /home/renderer/src/pkk_summer/pkk_maps.style /osm-data/data.osm.pbf
 
     exit 0
 fi
