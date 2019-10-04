@@ -22,6 +22,7 @@ if [ "$1" = "import" ]; then
     service postgresql start
     sudo -u postgres createuser renderer
     sudo -u postgres createdb -E UTF8 -O renderer gis
+    sudo -u postgres psql -c "ALTER USER renderer PASSWORD '${PGPASSWORD:-renderer}'"
     sudo -u postgres psql -d gis -c "CREATE EXTENSION postgis;"
     sudo -u postgres psql -d gis -c "CREATE EXTENSION hstore;"
     sudo -u postgres psql -d gis -c "ALTER TABLE geometry_columns OWNER TO renderer;"
@@ -53,6 +54,11 @@ if [ "$1" = "run" ]; then
 
     # Kubernetes hack needed or a way to recover if container crashes?
 
+    # Kubernetes emptydir volume hack
+    touch /var/lib/mod_tile/planet-import-complete
+    chown -R renderer:renderer /var/lib/mod_tile
+    chmod a+r /var/lib/mod_tile/planet-import-complete
+    
     # Run
     exec sudo -u renderer renderd -f -c /usr/local/etc/renderd.conf
 

@@ -59,7 +59,7 @@ if volume_exists >= 0:
 print 'RUN IMPORT ' + shell_cmd_str('docker run --rm -e THREADS=10 -e NODEMEM=10000 -v ' + new_pg_volume_name + ':/var/lib/postgresql/10/main marasu/openstreetmap-tile-server import')
 #print 'RUN IMPORT ' + shell_cmd_str('docker run --rm -e THREADS=10 -e NODEMEM=10000 -v /home/suomimar/Dropbox/projects/openstreetmap-tile-server/finland-latest.osm.pbf:/data.osm.pbf -v ' +
 #                                new_pg_volume_name + ':/var/lib/postgresql/10/main marasu/openstreetmap-tile-server import')
-print 'RUN TEST ' + shell_cmd_str('docker run --name ' + TEST_TILESERVER_NAME + ' -p ' + TEST_TILESERVER_PORT + ':80 -v ' + new_pg_volume_name + ':/var/lib/postgresql/10/main ' +
+print 'RUN TEST ' + shell_cmd_str('docker run --name ' + TEST_TILESERVER_NAME + ' -p ' + TEST_TILESERVER_PORT + ':80 -p 5432:5432 -v ' + new_pg_volume_name + ':/var/lib/postgresql/10/main ' +
                               '-d marasu/openstreetmap-tile-server run')
 
 # Health check for new container
@@ -84,7 +84,7 @@ if new_server_ok:
 	print 'RM ' + shell_cmd_str('docker rm ' + TILESERVER_NAME)
 	for volume in old_pg_volume_names:
 		print 'RM VOLUME ' + shell_cmd_str('docker volume rm ' + volume)
-	print 'RUN ' + shell_cmd_str('docker run --name ' + TILESERVER_NAME + ' -e THREADS=10 -p ' + TILESERVER_PORT + ':80 -v ' + new_pg_volume_name + ':/var/lib/postgresql/10/main ' +
+	print 'RUN ' + shell_cmd_str('docker run --name ' + TILESERVER_NAME + ' -e THREADS=10 -p ' + TILESERVER_PORT + ':80 -p 5432:5432 -v ' + new_pg_volume_name + ':/var/lib/postgresql/10/main ' +
                            '-v ' + RENDERED_VOLUME_NAME + ':/var/lib/mod_tile -d marasu/openstreetmap-tile-server run-fresh')
 else:
 	print 'ERROR: Container healthcheck failed'

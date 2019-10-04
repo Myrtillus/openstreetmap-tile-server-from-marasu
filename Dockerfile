@@ -18,13 +18,20 @@ RUN apt-get update && apt-get install -y libboost-all-dev git-core tar unzip wge
 	autoconf apache2-dev libtool libxml2-dev libbz2-dev libgeos-dev libgeos++-dev libproj-dev gdal-bin libmapnik-dev mapnik-utils python-mapnik \
 	fonts-noto-cjk fonts-noto-hinted fonts-noto-unhinted ttf-unifont \
 	postgresql postgresql-contrib postgis postgresql-10-postgis-2.4 \
-	npm nodejs curl
+	npm nodejs curl \
+	&& apt-get clean autoclean \
+	&& apt-get autoremove --yes \
+	&& rm -rf /var/lib/{apt,dpkg,cache,log}/
 USER renderer
 
 # Kubernetes hack, because emptydir-volume does not copy existing data from image
 USER root
 RUN mv /var/lib/postgresql/10/main /var/lib/postgresql/10/main2
 RUN mkdir /var/lib/postgresql/10/main
+
+# Configure Postgres
+RUN echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/10/main/pg_hba.conf
+RUN echo "listen_addresses = '*'" >> /etc/postgresql/10/main/postgresql.conf
 USER renderer
 
 # Install latest osm2pgsql
@@ -74,11 +81,12 @@ RUN npm install -g carto
 USER renderer
 
 # Configure stylesheets
+ARG NOCACHE=0
 WORKDIR /home/renderer/src
-RUN git clone -b pkk_summer https://github.com/myrtillus/openstreetmap-carto.git pkk_summer
+RUN git clone -b pkk_summer https://github.com/MaRaSu/openstreetmap-carto.git pkk_summer
 RUN git clone https://github.com/myrtillus/pkk_winter_2014.git pkk_winter
 WORKDIR /home/renderer/src/pkk_summer
-RUN wget -nv https://raw.githubusercontent.com/Myrtillus/osm2pgsql_style/master/pkk_maps.style
+RUN wget -nv https://raw.githubusercontent.com/MaRaSu/osm2pgsql_style/master/pkk_maps.style
 RUN carto -v
 RUN carto project.mml > mapnik.xml
 WORKDIR /home/renderer/src/pkk_winter
@@ -90,8 +98,9 @@ RUN carto project.mml > mapnik.xml
 WORKDIR /home/renderer/src/pkk_summer
 RUN ./get-shapefiles.sh
 WORKDIR /home/renderer/src/pkk_winter
-RUN chmod +x get-shapefiles.sh
-RUN ./get-shapefiles.sh
+RUN cp /home/renderer/src/pkk_summer/get-shapefiles.sh get-shapefiles-new.sh
+#RUN chmod +x get-shapefiles.sh
+RUN ./get-shapefiles-new.sh
 
 # Copy config files
 USER root
@@ -113,3 +122,5 @@ RUN ln -s ../mods-available/cgid.load .
 # Entrypoint 
 ENTRYPOINT ["/run.sh"]
 CMD []
+EXPOSE 80
+EXPOSE 5432
