@@ -84,7 +84,7 @@ USER renderer
 ARG NOCACHE=0
 WORKDIR /home/renderer/src
 RUN git clone -b pkk_summer https://github.com/MaRaSu/openstreetmap-carto.git pkk_summer
-RUN git clone https://github.com/myrtillus/pkk_winter_2014.git pkk_winter
+RUN git clone https://github.com/MaRaSu/pkk_winter_2014.git pkk_winter
 WORKDIR /home/renderer/src/pkk_summer
 RUN wget -nv https://raw.githubusercontent.com/MaRaSu/osm2pgsql_style/master/pkk_maps.style
 RUN carto -v
@@ -98,9 +98,7 @@ RUN carto project.mml > mapnik.xml
 WORKDIR /home/renderer/src/pkk_summer
 RUN ./get-shapefiles.sh
 WORKDIR /home/renderer/src/pkk_winter
-RUN cp /home/renderer/src/pkk_summer/get-shapefiles.sh get-shapefiles-new.sh
-#RUN chmod +x get-shapefiles.sh
-RUN ./get-shapefiles-new.sh
+RUN ./get-shapefiles.sh
 
 # Copy config files
 USER root
