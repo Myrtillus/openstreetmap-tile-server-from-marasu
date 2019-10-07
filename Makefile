@@ -1,10 +1,10 @@
 .PHONY: build push test
 
 build: 
-	docker build -t registry.finomena.fi/c/openstreetmap-tile-server:0.4.2 --build-arg NOCACHE=$$(date +%s) .
+	docker build -t registry.finomena.fi/c/openstreetmap-tile-server:0.4.4 --build-arg NOCACHE=$$(date +%s) .
 
 push: build
-	docker push registry.finomena.fi/c/openstreetmap-tile-server:0.4.2
+	docker push registry.finomena.fi/c/openstreetmap-tile-server:0.4.4
 
 test: build
 	-docker volume rm openstreetmap-data
