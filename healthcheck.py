@@ -60,15 +60,14 @@ for tile_url in tile_test_set:
 	except socket.error as e:
 		health_status = False
 
-
-print()
-
 if health_status:
 	print('Content-Type: text/plain;charset=utf-8')
+	print()
 	print('OK')
 else:
 	print('Status: 500 Internal Server Error')
 	print('Content-Type: text/plain;charset=utf-8')
+	print()
 	print('ERROR')
 
 
