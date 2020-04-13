@@ -14,7 +14,8 @@ fi
 if [ "$1" = "import" ]; then
     # Kubernetes emptydir-volume hack
     rm -rf /var/lib/postgresql/10/main
-    mv /var/lib/postgresql/10/main2/* /var/lib/postgresql/10/main/
+    cp -R /var/lib/postgresql/10/main2/* /var/lib/postgresql/10/main/
+    rm -rf /var/lib/postgresql/10/main2
     chown -R postgres:postgres /var/lib/postgresql/10/main
     chmod 700 /var/lib/postgresql/10/main
 
