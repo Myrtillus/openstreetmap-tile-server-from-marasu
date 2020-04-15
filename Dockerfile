@@ -30,38 +30,43 @@ RUN mv /var/lib/postgresql/10/main /var/lib/postgresql/10/main2
 RUN mkdir /var/lib/postgresql/10/main
 
 # Configure Postgres
+COPY postgresql.custom.conf /etc/postgresql/10/main/conf.d/
+RUN chown postgres:postgres /etc/postgresql/10/main/conf.d/postgresql.custom.conf
 RUN echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/10/main/pg_hba.conf
-RUN echo "listen_addresses = '*'" >> /etc/postgresql/10/main/postgresql.conf
-USER renderer
+# RUN echo "listen_addresses = '*'" >> /etc/postgresql/10/main/postgresql.conf
 
 # Install latest osm2pgsql
-RUN mkdir /home/renderer/src
-WORKDIR /home/renderer/src
-RUN git clone https://github.com/openstreetmap/osm2pgsql.git
-WORKDIR /home/renderer/src/osm2pgsql
-USER renderer
-RUN mkdir build
-WORKDIR /home/renderer/src/osm2pgsql/build
-RUN cmake ..
-RUN make
-USER root
-RUN make install
+RUN mkdir -p /home/renderer/src \
+	&& cd /home/renderer/src \
+	&& git clone https://github.com/openstreetmap/osm2pgsql.git \
+	&& cd /home/renderer/src/osm2pgsql \
+	&& rm -rf .git \
+	&& mkdir build \
+	&& cd build \
+	&& cmake .. \
+	&& make -j $(nproc) \
+	&& make install \
+	&& mkdir /nodes \
+	&& chown renderer:renderer /nodes \
+	&& rm -rf /home/renderer/src/osm2pgsql
 USER renderer
 
 # Test Mapnik
 RUN python -c 'import mapnik'
 
 # Install mod_tile and renderd
-WORKDIR /home/renderer/src
-RUN git clone -b switch2osm https://github.com/SomeoneElseOSM/mod_tile.git
-WORKDIR /home/renderer/src/mod_tile
-RUN ./autogen.sh
-RUN ./configure
-RUN make
 USER root
-RUN make install
-RUN make install-mod_tile
-RUN ldconfig
+RUN mkdir -p /home/renderer/src \
+	&& cd /home/renderer/src \
+	&& git clone -b switch2osm https://github.com/SomeoneElseOSM/mod_tile.git \
+	&& cd mod_tile \
+	&& ./autogen.sh \
+	&& ./configure \
+	&& make -j $(nproc) \
+	&& make -j $(nproc) install \
+	&& make -j $(nproc) install-mod_tile \
+	&& ldconfig \
+	&& cd ..
 USER renderer
 
 # Configure Apache
@@ -70,8 +75,9 @@ RUN mkdir /var/lib/mod_tile
 RUN chown renderer /var/lib/mod_tile
 RUN mkdir /var/run/renderd
 RUN chown renderer /var/run/renderd
-RUN echo "LoadModule tile_module /usr/lib/apache2/modules/mod_tile.so" >> /etc/apache2/conf-available/mod_tile.conf
-RUN a2enconf mod_tile
+RUN echo "LoadModule tile_module /usr/lib/apache2/modules/mod_tile.so" >> /etc/apache2/conf-available/mod_tile.conf \
+ && echo "LoadModule headers_module /usr/lib/apache2/modules/mod_headers.so" >> /etc/apache2/conf-available/mod_headers.conf \
+ && a2enconf mod_tile && a2enconf mod_headers
 COPY apache.conf /etc/apache2/sites-available/000-default.conf
 USER renderer
 
@@ -82,6 +88,9 @@ USER renderer
 
 # Configure stylesheets
 ARG NOCACHE=0
+USER root
+RUN chown -R renderer:renderer /home/renderer/src
+USER renderer
 WORKDIR /home/renderer/src
 RUN git clone -b pkk_summer https://github.com/MaRaSu/openstreetmap-carto.git pkk_summer
 RUN git clone https://github.com/MaRaSu/pkk_winter_2014.git pkk_winter
@@ -96,9 +105,11 @@ RUN carto project.mml > mapnik.xml
 
 # Load shapefiles
 WORKDIR /home/renderer/src/pkk_summer
-RUN ./get-shapefiles.sh
+RUN ./get-shapefiles.sh \
+ && rm data/*.zip \
+ && rm data/*.tgz
 WORKDIR /home/renderer/src/pkk_winter
-RUN ./get-shapefiles.sh
+RUN ln -s ../pkk_summer/data .
 
 # Copy config files
 USER root

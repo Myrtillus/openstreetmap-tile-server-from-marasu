@@ -3,6 +3,7 @@
 # Pre-rendering of selected regions of map to mod_tile  cache
 # -----------------------------------------------------------------
 
+import sys
 import subprocess
 import math
 
@@ -83,3 +84,5 @@ render_tiles(bbox, 10, 16, NUM_THREADS, MAP_2X)
 # Helsinki
 bbox = (24, 60, 25.3, 60.4)
 render_tiles(bbox, 10, 16, NUM_THREADS, MAP_2X)
+
+sys.exit(0)
