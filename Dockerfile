@@ -9,19 +9,86 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN adduser --disabled-password --gecos "" renderer
 
 # Install dependencies
-RUN apt-get update && apt-get install -y libboost-all-dev git-core tar unzip wget bzip2 build-essential autoconf libtool libxml2-dev \ 
-	libgeos-dev libgeos++-dev libpq-dev libbz2-dev libproj-dev munin-node munin libprotobuf-c0-dev protobuf-c-compiler libfreetype6-dev \ 
-	libtiff5-dev libicu-dev libgdal-dev libcairo-dev libcairomm-1.0-dev apache2 apache2-dev libagg-dev liblua5.2-dev ttf-unifont lua5.1 \
-	liblua5.1-dev libgeotiff-epsg sudo \
-	make cmake g++ libboost-dev libboost-system-dev libboost-filesystem-dev libexpat1-dev zlib1g-dev libbz2-dev libpq-dev libgeos-dev \
-	libgeos++-dev libproj-dev lua5.2 liblua5.2-dev \
-	autoconf apache2-dev libtool libxml2-dev libbz2-dev libgeos-dev libgeos++-dev libproj-dev gdal-bin libmapnik-dev mapnik-utils python-mapnik \
-	fonts-noto-cjk fonts-noto-hinted fonts-noto-unhinted ttf-unifont \
-	postgresql postgresql-contrib postgis postgresql-10-postgis-2.4 \
-	npm nodejs curl \
+RUN apt-get update \
+	&& apt-get install wget gnupg2 lsb-core -y \
+	&& wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+	&& echo "deb [ trusted=yes ] https://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" | tee /etc/apt/sources.list.d/pgdg.list \
+	&& apt-get update \
+	&& apt-get install -y apt-transport-https ca-certificates 
+
+RUN apt-get install -y curl \
+	&& wget --quiet -O - https://deb.nodesource.com/setup_10.x | bash - \
+	&& apt-get install -y nodejs
+
+RUN apt-get install -y --no-install-recommends \
+	apache2 \
+	apache2-dev \
+	autoconf \
+	build-essential \
+	bzip2 \
+	cmake \
+	cron \
+	fonts-noto-cjk \
+	fonts-noto-hinted \
+	fonts-noto-unhinted \
+	gcc \
+	gdal-bin \
+	git-core \
+	libagg-dev \
+	libboost-filesystem-dev \
+	libboost-system-dev \
+	libbz2-dev \
+	libcairo-dev \
+	libcairomm-1.0-dev \
+	libexpat1-dev \
+	libfreetype6-dev \
+	libgdal-dev \
+	libgeos++-dev \
+	libgeos-dev \
+	libgeotiff-epsg \
+	libicu-dev \
+	liblua5.3-dev \
+	libmapnik-dev \
+	libpq-dev \
+	libproj-dev \
+	libprotobuf-c0-dev \
+	libtiff5-dev \
+	libtool \
+	libxml2-dev \
+	lua5.3 \
+	make \
+	mapnik-utils \
+	node-gyp \
+	osmium-tool \
+	osmosis \
+	postgis \
+	postgresql-10 \
+	postgresql-contrib-10 \
+	postgresql-server-dev-10 \
+	protobuf-c-compiler \
+	python-mapnik \
+#	python3-lxml \
+#	python3-psycopg2 \
+#	python3-shapely \
+	sudo \
+	tar \
+	ttf-unifont \
+	unzip \
+	wget \
+	zlib1g-dev \
 	&& apt-get clean autoclean \
 	&& apt-get autoremove --yes \
 	&& rm -rf /var/lib/{apt,dpkg,cache,log}/
+
+# Set up PostGIS
+RUN wget https://download.osgeo.org/postgis/source/postgis-2.4.4.tar.gz -O postgis.tar.gz \
+	&& mkdir -p postgis_src \
+	&& tar -xvzf postgis.tar.gz --strip 1 -C postgis_src \
+	&& rm postgis.tar.gz \
+	&& cd postgis_src \
+	&& ./configure && make && make install \
+	&& cd .. && rm -rf postgis_src
+
 USER renderer
 
 # Kubernetes hack, because emptydir-volume does not copy existing data from image
