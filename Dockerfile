@@ -10,17 +10,13 @@ RUN adduser --disabled-password --gecos "" renderer
 
 # Install dependencies
 RUN apt-get update \
-	&& apt-get install wget gnupg2 lsb-core -y \
+	&& apt-get install -y wget gnupg2 lsb-core \
 	&& wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
 	&& echo "deb [ trusted=yes ] https://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" | tee /etc/apt/sources.list.d/pgdg.list \
 	&& apt-get update \
-	&& apt-get install -y apt-transport-https ca-certificates 
-
-RUN apt-get install -y curl \
+	&& apt-get install -y apt-transport-https ca-certificates curl \
 	&& wget --quiet -O - https://deb.nodesource.com/setup_10.x | bash - \
-	&& apt-get install -y nodejs
-
-RUN apt-get install -y --no-install-recommends \
+	&& apt-get install -y --no-install-recommends nodejs \
 	apache2 \
 	apache2-dev \
 	autoconf \
@@ -74,11 +70,10 @@ RUN apt-get install -y --no-install-recommends \
 	tar \
 	ttf-unifont \
 	unzip \
-	wget \
 	zlib1g-dev \
 	&& apt-get clean autoclean \
 	&& apt-get autoremove --yes \
-	&& rm -rf /var/lib/{apt,dpkg,cache,log}/
+	&& rm -rf /var/lib/{apt,dpkg,cache,log}/ 
 
 # Set up PostGIS
 RUN wget https://download.osgeo.org/postgis/source/postgis-2.4.4.tar.gz -O postgis.tar.gz \
@@ -89,16 +84,13 @@ RUN wget https://download.osgeo.org/postgis/source/postgis-2.4.4.tar.gz -O postg
 	&& ./configure && make && make install \
 	&& cd .. && rm -rf postgis_src
 
-USER renderer
-
 # Kubernetes hack, because emptydir-volume does not copy existing data from image
 USER root
-RUN mv /var/lib/postgresql/10/main /var/lib/postgresql/10/main2
-RUN mkdir /var/lib/postgresql/10/main
+RUN mv /var/lib/postgresql/10/main /var/lib/postgresql/10/main2 \
+	&& mkdir /var/lib/postgresql/10/main
 
 # Configure Postgres
-COPY postgresql.custom.conf /etc/postgresql/10/main/conf.d/
-RUN chown postgres:postgres /etc/postgresql/10/main/conf.d/postgresql.custom.conf
+COPY --chown=postgres:postgres postgresql.custom.conf /etc/postgresql/10/main/conf.d/
 RUN echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/10/main/pg_hba.conf
 # RUN echo "listen_addresses = '*'" >> /etc/postgresql/10/main/postgresql.conf
 
@@ -138,10 +130,10 @@ USER renderer
 
 # Configure Apache
 USER root
-RUN mkdir /var/lib/mod_tile
-RUN chown renderer /var/lib/mod_tile
-RUN mkdir /var/run/renderd
-RUN chown renderer /var/run/renderd
+RUN mkdir /var/lib/mod_tile \
+&& chown renderer /var/lib/mod_tile
+RUN mkdir /var/run/renderd \
+&& chown renderer /var/run/renderd
 RUN echo "LoadModule tile_module /usr/lib/apache2/modules/mod_tile.so" >> /etc/apache2/conf-available/mod_tile.conf \
  && echo "LoadModule headers_module /usr/lib/apache2/modules/mod_headers.so" >> /etc/apache2/conf-available/mod_headers.conf \
  && a2enconf mod_tile && a2enconf mod_headers
