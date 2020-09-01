@@ -1,0 +1,186 @@
+FROM ubuntu:18.04
+
+# Based on
+# https://switch2osm.org/manually-building-a-tile-server-18-04-lts/
+
+# Set up environment and renderer user
+ENV TZ=Europe/Helsinki
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN adduser --disabled-password --gecos "" renderer
+
+# Install dependencies
+RUN apt-get update \
+	&& apt-get install -y wget gnupg2 lsb-core \
+	&& wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+	&& echo "deb [ trusted=yes ] https://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" | tee /etc/apt/sources.list.d/pgdg.list \
+	&& apt-get update \
+	&& apt-get install -y apt-transport-https ca-certificates curl \
+	&& wget --quiet -O - https://deb.nodesource.com/setup_10.x | bash - \
+	&& apt-get install -y --no-install-recommends nodejs \
+	apache2 \
+	apache2-dev \
+	autoconf \
+	build-essential \
+	bzip2 \
+	cmake \
+	cron \
+	fonts-noto-cjk \
+	fonts-noto-hinted \
+	fonts-noto-unhinted \
+	gcc \
+	gdal-bin \
+	git-core \
+	libagg-dev \
+	libboost-filesystem-dev \
+	libboost-system-dev \
+	libbz2-dev \
+	libcairo-dev \
+	libcairomm-1.0-dev \
+	libexpat1-dev \
+	libfreetype6-dev \
+	libgdal-dev \
+	libgeos++-dev \
+	libgeos-dev \
+	libgeotiff-epsg \
+	libicu-dev \
+	liblua5.3-dev \
+	libmapnik-dev \
+	libpq-dev \
+	libproj-dev \
+	libprotobuf-c0-dev \
+	libtiff5-dev \
+	libtool \
+	libxml2-dev \
+	lua5.3 \
+	make \
+	mapnik-utils \
+	node-gyp \
+	osmium-tool \
+	osmosis \
+	postgis \
+	postgresql-10 \
+	postgresql-contrib-10 \
+	postgresql-server-dev-10 \
+	protobuf-c-compiler \
+	python-mapnik \
+#	python3-lxml \
+#	python3-psycopg2 \
+#	python3-shapely \
+	sudo \
+	tar \
+	ttf-unifont \
+	unzip \
+	zlib1g-dev \
+	&& apt-get clean autoclean \
+	&& apt-get autoremove --yes \
+	&& rm -rf /var/lib/{apt,dpkg,cache,log}/ 
+
+# Set up PostGIS
+RUN wget https://download.osgeo.org/postgis/source/postgis-2.4.4.tar.gz -O postgis.tar.gz \
+	&& mkdir -p postgis_src \
+	&& tar -xvzf postgis.tar.gz --strip 1 -C postgis_src \
+	&& rm postgis.tar.gz \
+	&& cd postgis_src \
+	&& ./configure && make && make install \
+	&& cd .. && rm -rf postgis_src
+
+# Kubernetes hack, because emptydir-volume does not copy existing data from image
+USER root
+RUN mv /var/lib/postgresql/10/main /var/lib/postgresql/10/main2 \
+	&& mkdir /var/lib/postgresql/10/main
+
+# Configure Postgres
+COPY --chown=postgres:postgres postgresql.custom.conf /etc/postgresql/10/main/conf.d/
+RUN echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/10/main/pg_hba.conf
+# RUN echo "listen_addresses = '*'" >> /etc/postgresql/10/main/postgresql.conf
+
+# Install latest osm2pgsql
+RUN mkdir -p /home/renderer/src \
+	&& cd /home/renderer/src \
+	&& git clone https://github.com/openstreetmap/osm2pgsql.git \
+	&& cd /home/renderer/src/osm2pgsql \
+	&& rm -rf .git \
+	&& mkdir build \
+	&& cd build \
+	&& cmake .. \
+	&& make -j $(nproc) \
+	&& make install \
+	&& mkdir /nodes \
+	&& chown renderer:renderer /nodes \
+	&& rm -rf /home/renderer/src/osm2pgsql
+USER renderer
+
+# Test Mapnik
+RUN python -c 'import mapnik'
+
+# Install mod_tile and renderd
+USER root
+RUN mkdir -p /home/renderer/src \
+	&& cd /home/renderer/src \
+	&& git clone -b switch2osm https://github.com/SomeoneElseOSM/mod_tile.git \
+	&& cd mod_tile \
+	&& ./autogen.sh \
+	&& ./configure \
+	&& make -j $(nproc) \
+	&& make -j $(nproc) install \
+	&& make -j $(nproc) install-mod_tile \
+	&& ldconfig \
+	&& cd ..
+USER renderer
+
+# Configure Apache
+USER root
+RUN mkdir /var/lib/mod_tile \
+&& chown renderer /var/lib/mod_tile
+RUN mkdir /var/run/renderd \
+&& chown renderer /var/run/renderd
+RUN echo "LoadModule tile_module /usr/lib/apache2/modules/mod_tile.so" >> /etc/apache2/conf-available/mod_tile.conf \
+ && echo "LoadModule headers_module /usr/lib/apache2/modules/mod_headers.so" >> /etc/apache2/conf-available/mod_headers.conf \
+ && a2enconf mod_tile && a2enconf mod_headers
+COPY apache.conf /etc/apache2/sites-available/000-default.conf
+USER renderer
+
+# Install Carto
+USER root
+RUN npm install -g carto
+USER renderer
+
+# Configure stylesheets
+ARG NOCACHE=0
+USER root
+RUN chown -R renderer:renderer /home/renderer/src
+USER renderer
+WORKDIR /home/renderer/src
+RUN git clone https://github.com/TapioKn/MTB-kartta_Mapnik_styles.git summer_map
+WORKDIR /home/renderer/src/summer_map/MTB-kartta_full
+RUN carto -v
+RUN carto project.mml > mapnik.xml
+
+# Load shapefiles
+WORKDIR /home/renderer/src/summer_map/MTB-kartta_full
+RUN chmod a+x get-shapefiles.sh
+RUN ./get-shapefiles.sh \
+ && rm data/*.zip
+
+# Copy config files
+USER root
+COPY run-new.sh /run.sh
+COPY pre_render.py /usr/local/bin/
+COPY renderd-new.conf /usr/local/etc/renderd.conf
+RUN chmod a+x /usr/local/bin/pre_render.py
+COPY index.html /var/www/html/
+
+# Add healthcheck script to Apache at /health
+COPY healthcheck.py /var/www/html/health/
+RUN chmod a+x /var/www/html/health/healthcheck.py
+COPY apache_enable_cgi.txt /etc/apache2/
+RUN cat /etc/apache2/apache_enable_cgi.txt >> /etc/apache2/apache2.conf
+WORKDIR /etc/apache2/mods-enabled
+RUN ln -s ../mods-available/cgid.conf .
+RUN ln -s ../mods-available/cgid.load .
+
+# Entrypoint 
+ENTRYPOINT ["/run.sh"]
+CMD []
+EXPOSE 80
+EXPOSE 5432
