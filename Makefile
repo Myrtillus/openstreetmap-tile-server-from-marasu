@@ -10,7 +10,7 @@ build_min:
 
 build_new:
 	docker build -t registry.finomena.fi/c/openstreetmap-tile-server-new:latest -f Dockerfile-new-map --build-arg NOCACHE=$$(date +%s) .
-	docker tag registry.finomena.fi/c/openstreetmap-tile-server-new:latest registry.finomena.fi/c/openstreetmap-tile-server:0.5.19
+	docker tag registry.finomena.fi/c/openstreetmap-tile-server-new:latest registry.finomena.fi/c/openstreetmap-tile-server:0.5.21
 
 push: build
 	docker push registry.finomena.fi/c/openstreetmap-tile-server:0.4.12
