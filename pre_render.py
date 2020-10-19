@@ -42,47 +42,15 @@ def render_tiles(bbox, minZoom=1, maxZoom=18, num_threads=NUM_THREADS, map_name=
 		print res
 
 
-# World
-# bbox = (-179.0, -85, 179.0, 85.0)
-# render_tiles(bbox, 1, 5)
-
 # Suomi
 bbox = (20.5, 59.7, 31, 70)
-render_tiles(bbox, 6, 9)
-
-# Lantinen Suomi
-bbox = (21.6462, 60.5, 26.1390, 62.2436)
-render_tiles(bbox, 10, 12)
-
-# Tampere
-bbox = (23.0 , 61 , 24.44 , 61.59293)
-render_tiles(bbox, 10, 14)
-
-# Helsinki
-bbox = (24, 60, 25.3, 60.4)
-render_tiles(bbox, 10, 14)
+render_tiles(bbox, 6, 10)
 
 # Same for @2x
 MAP_2X = 'pkk_retina'
 
-# World
-# bbox = (-179.0, -85, 179.0, 85.0)
-# render_tiles(bbox, 1, 5, NUM_THREADS, MAP_2X)
-
 # Suomi
 bbox = (20.5, 59.7, 31, 70)
-render_tiles(bbox, 6, 9, NUM_THREADS, MAP_2X)
-
-# Lantinen Suomi
-bbox = (21.6462, 60.5, 26.1390, 62.2436)
-render_tiles(bbox, 10, 12, NUM_THREADS, MAP_2X)
-
-# Tampere
-bbox = (23.0 , 61 , 24.44 , 61.59293)
-render_tiles(bbox, 10, 14, NUM_THREADS, MAP_2X)
-
-# Helsinki
-bbox = (24, 60, 25.3, 60.4)
-render_tiles(bbox, 10, 14, NUM_THREADS, MAP_2X)
+render_tiles(bbox, 6, 10, NUM_THREADS, MAP_2X)
 
 sys.exit(0)
