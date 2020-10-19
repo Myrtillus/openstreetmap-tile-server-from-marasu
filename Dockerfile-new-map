@@ -175,6 +175,7 @@ RUN ./get-shapefiles.sh \
 USER root
 COPY run-new.sh /run.sh
 COPY pre_render.py /usr/local/bin/
+COPY post_render.py /usr/local/bin/
 COPY renderd-new.conf /usr/local/etc/renderd.conf
 RUN chmod a+x /usr/local/bin/pre_render.py
 COPY index.html /var/www/html/
