@@ -92,6 +92,9 @@ if [ "$1" = "run" ]; then
 
     init_for_rendering
     
+    # Start post-rendering as a background job
+    sleep 60 && sudo -u renderer /usr/local/bin/post_render.py &
+
     # Run
     exec sudo -u renderer renderd -f -c /usr/local/etc/renderd.conf
 
@@ -106,7 +109,7 @@ if [ "$1" = "run-fresh" ]; then
     rm -rf /var/lib/mod_tile/*
         
     # Start pre-rendering as a background job
-    sleep 20 && sudo -u renderer /usr/local/bin/pre_render.py &
+    sleep 60 && sudo -u renderer /usr/local/bin/pre_render.py &
 
     # Run
     exec sudo -u renderer renderd -f -c /usr/local/etc/renderd.conf
