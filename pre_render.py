@@ -8,7 +8,7 @@ import subprocess
 import math
 
 # Default number of rendering threads to spawn, should be roughly equal to number of CPU cores available
-NUM_THREADS = 6
+NUM_THREADS = 4
 MAP_DEFAULT_NAME = 'pkk'
 
 def deg2num(lat_deg, lon_deg, zoom):
