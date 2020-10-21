@@ -20,7 +20,7 @@ min_y = 15000
 max_y = 18000
 image_type = '.png'
 min_tile_size = 100
-n_tiles_to_check = 4
+n_tiles_to_check = 2
 
 def random_tiles(nbr, site, image_type):
 	tiles = []

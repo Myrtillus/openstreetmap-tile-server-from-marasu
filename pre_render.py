@@ -25,7 +25,7 @@ def render_tiles_per_zoom(bbox, zoom, map_name=MAP_DEFAULT_NAME, num_threads=NUM
 	(minX, minY) = deg2num(bbox[3], bbox[0], zoom)
 	(maxX, maxY) = deg2num(bbox[1], bbox[2], zoom)
 
-	render_cmd_args = 'render_list -a -f -m %s -x %s -y %s -X %s -Y %s -z %s -Z %s -n %s' \
+	render_cmd_args = 'render_list -a -m %s -x %s -y %s -X %s -Y %s -z %s -Z %s -n %s' \
             % (map_name,
                minX, minY,
                maxX, maxY,
@@ -44,13 +44,13 @@ def render_tiles(bbox, minZoom=1, maxZoom=18, num_threads=NUM_THREADS, map_name=
 
 # Suomi
 bbox = (20.5, 59.7, 31, 70)
-render_tiles(bbox, 6, 10)
+render_tiles(bbox, 6, 12)
 
 # Same for @2x
 MAP_2X = 'pkk_retina'
 
 # Suomi
 bbox = (20.5, 59.7, 31, 70)
-render_tiles(bbox, 6, 10, NUM_THREADS, MAP_2X)
+render_tiles(bbox, 6, 12, NUM_THREADS, MAP_2X)
 
 sys.exit(0)
