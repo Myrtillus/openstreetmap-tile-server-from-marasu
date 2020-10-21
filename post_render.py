@@ -41,6 +41,17 @@ def render_tiles(bbox, minZoom=1, maxZoom=18, num_threads=NUM_THREADS, map_name=
 		res = render_tiles_per_zoom(bbox, zoom, map_name, num_threads)
 		print res
 
+# Same for @2x
+MAP_2X = 'pkk_retina'
+
+# Suomi
+bbox = (20.5, 59.7, 31, 70)
+render_tiles(bbox, 11, 12)
+
+# Suomi
+bbox = (20.5, 59.7, 31, 70)
+render_tiles(bbox, 11, 12, NUM_THREADS, MAP_2X)
+
 # Tampere
 bbox = (23.0 , 61 , 24.44 , 61.59293)
 render_tiles(bbox, 13, 16)
@@ -48,9 +59,6 @@ render_tiles(bbox, 13, 16)
 # Helsinki
 bbox = (24, 60, 25.3, 60.4)
 render_tiles(bbox, 13, 16)
-
-# Same for @2x
-MAP_2X = 'pkk_retina'
 
 # Tampere
 bbox = (23.0 , 61 , 24.44 , 61.59293)

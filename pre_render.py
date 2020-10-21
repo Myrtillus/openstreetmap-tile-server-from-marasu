@@ -44,13 +44,13 @@ def render_tiles(bbox, minZoom=1, maxZoom=18, num_threads=NUM_THREADS, map_name=
 
 # Suomi
 bbox = (20.5, 59.7, 31, 70)
-render_tiles(bbox, 6, 12)
+render_tiles(bbox, 6, 10)
 
 # Same for @2x
 MAP_2X = 'pkk_retina'
 
 # Suomi
 bbox = (20.5, 59.7, 31, 70)
-render_tiles(bbox, 6, 12, NUM_THREADS, MAP_2X)
+render_tiles(bbox, 6, 10, NUM_THREADS, MAP_2X)
 
 sys.exit(0)
