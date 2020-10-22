@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "$#" -ne 1 ]; then
+if [ "$#" -lt 1 ]; then
     echo "usage: <import|run>"
     echo "commands:"
     echo "    import: Set up the database and import /osm-data/data.osm.pbf"
@@ -73,7 +73,7 @@ if [ "$1" = "pre-render" ]; then
         echo
         echo "Starting pre-rendering"
         echo
-        sudo -u renderer /usr/local/bin/pre_render.py
+        sudo -u renderer /usr/local/bin/pre_render${2}.py
         pre_rendering=$?
         echo "Pre-rendering exited with $pre_rendering"
         service postgresql stop
