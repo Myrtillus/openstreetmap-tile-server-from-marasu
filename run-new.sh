@@ -36,6 +36,8 @@ if [ "$1" = "import" ]; then
         wget -nv http://download.geofabrik.de/europe/finland-latest.osm.pbf -O /osm-data/data.osm.pbf
     fi
 
+    init_mod_tile
+
     # Import data
     # Tried using --drop: db size dropped to 1/3 however rendering slowed down dramatically
     exec sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore -C ${NODEMEM:-2048} --number-processes ${THREADS:-4} -S /home/renderer/src/summer_map/MTB-kartta_full/tk_mtb.style /osm-data/data.osm.pbf
@@ -43,21 +45,23 @@ if [ "$1" = "import" ]; then
     exit 0
 fi
 
+function init_mod_tile() {
+    # Kubernetes emptydir volume hack for mod_tile
+    touch /var/lib/mod_tile/planet-import-complete
+    chown -R renderer:renderer /var/lib/mod_tile
+    chmod a+r /var/lib/mod_tile/planet-import-complete
+}
+
 function init_for_rendering() {
     # Initialize PostgreSQL and Apache
     echo "export APACHE_ARGUMENTS='-D ALLOW_CORS'" >> /etc/apache2/envvars
     service postgresql start
     service apache2 restart
-    sleep 5
+    sleep 10
     service apache2 restart
 
     # Configure renderd threads
     sed -i -E "s/num_threads=[0-9]+/num_threads=${THREADS:-4}/g" /usr/local/etc/renderd.conf
-
-    # Kubernetes emptydir volume hack
-    touch /var/lib/mod_tile/planet-import-complete
-    chown -R renderer:renderer /var/lib/mod_tile
-    chmod a+r /var/lib/mod_tile/planet-import-complete
 }
 
 if [ "$1" = "pre-render" ]; then
@@ -93,7 +97,7 @@ if [ "$1" = "run" ]; then
     init_for_rendering
     
     # Start post-rendering as a background job
-    sleep 60 && sudo -u renderer /usr/local/bin/post_render.py &
+    sleep 180 && sudo -u renderer /usr/local/bin/post_render.py &
 
     # Run
     exec sudo -u renderer renderd -f -c /usr/local/etc/renderd.conf
@@ -109,7 +113,7 @@ if [ "$1" = "run-fresh" ]; then
     rm -rf /var/lib/mod_tile/*
         
     # Start pre-rendering as a background job
-    sleep 60 && sudo -u renderer /usr/local/bin/pre_render.py &
+    sleep 180 && sudo -u renderer /usr/local/bin/pre_render_1.py &
 
     # Run
     exec sudo -u renderer renderd -f -c /usr/local/etc/renderd.conf
