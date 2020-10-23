@@ -57,8 +57,8 @@ function init_for_rendering() {
     echo "export APACHE_ARGUMENTS='-D ALLOW_CORS'" >> /etc/apache2/envvars
     service postgresql start
     service apache2 restart
-    sleep 10
-    service apache2 restart
+    #sleep 10
+    #service apache2 restart
 
     # Configure renderd threads
     sed -i -E "s/num_threads=[0-9]+/num_threads=${THREADS:-4}/g" /usr/local/etc/renderd.conf

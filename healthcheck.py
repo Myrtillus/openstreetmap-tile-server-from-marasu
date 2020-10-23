@@ -20,7 +20,7 @@ min_y = 15000
 max_y = 18000
 image_type = '.png'
 min_tile_size = 100
-n_tiles_to_check = 2
+n_tiles_to_check = 1
 
 def random_tiles(nbr, site, image_type):
 	tiles = []
@@ -49,7 +49,7 @@ exit
 
 for tile_url in tile_test_set:
 	try:
-		res = urllib.request.urlopen(tile_url[0], None, 10)
+		res = urllib.request.urlopen(tile_url[0], None, 30)
 		len = int(res.getheader('Content-Length'))
 		if res.getheader('Content-Type') != 'image/png' or len < tile_url[1]:
 			health_status = False
