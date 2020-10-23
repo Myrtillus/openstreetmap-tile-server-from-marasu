@@ -55,7 +55,7 @@ function init_mod_tile() {
 function init_for_serving() {
    # Initialize Apache
     echo "export APACHE_ARGUMENTS='-D ALLOW_CORS'" >> /etc/apache2/envvars
-    service apache2 restart
+    service apache2 start
     #sleep 10
     #service apache2 restart
 }
