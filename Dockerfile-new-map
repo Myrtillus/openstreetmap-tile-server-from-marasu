@@ -179,6 +179,7 @@ COPY post_render.py /usr/local/bin/
 COPY renderd-new.conf /usr/local/etc/renderd.conf
 RUN chmod a+x /usr/local/bin/pre_render*.py
 COPY restarter.sh /usr/local/bin/
+COPY resetter.sh /usr/local/bin/
 COPY index.html /var/www/html/
 
 # Add healthcheck script to Apache at /health

@@ -73,7 +73,7 @@ if [ "$1" = "pre-render" ]; then
     init_for_rendering
       
     # Start rendering & do healthcheck
-    restarter.sh "sudo -u renderer renderd -f -c /usr/local/etc/renderd.conf" &
+    resetter.sh "sudo -u renderer renderd -f -c /usr/local/etc/renderd.conf" &
     sleep 60
     #sleep 20 && tileserver_ok=$(curl -m 30 -s http://localhost/health/)
 
