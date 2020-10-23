@@ -52,13 +52,17 @@ function init_mod_tile() {
     chmod a+r /var/lib/mod_tile/planet-import-complete
 }
 
-function init_for_rendering() {
-    # Initialize PostgreSQL and Apache
+function init_for_serving() {
+   # Initialize Apache
     echo "export APACHE_ARGUMENTS='-D ALLOW_CORS'" >> /etc/apache2/envvars
-    service postgresql start
     service apache2 restart
     #sleep 10
     #service apache2 restart
+}
+
+function init_for_rendering() {
+    # Initialize PostgreSQL
+    service postgresql start
 
     # Configure renderd threads
     sed -i -E "s/num_threads=[0-9]+/num_threads=${THREADS:-4}/g" /usr/local/etc/renderd.conf
@@ -69,25 +73,18 @@ if [ "$1" = "pre-render" ]; then
     init_for_rendering
       
     # Start rendering & do healthcheck
-    sudo -u renderer renderd -f -c /usr/local/etc/renderd.conf &
-    sleep 20 && tileserver_ok=$(curl -m 30 -s http://localhost/health/)
+    restarter.sh "sudo -u renderer renderd -f -c /usr/local/etc/renderd.conf" &
+    #sleep 20 && tileserver_ok=$(curl -m 30 -s http://localhost/health/)
 
-    if [ "$tileserver_ok" = "OK" ]; then
-        # Start pre-rendering
-        echo
-        echo "Starting pre-rendering"
-        echo
-        sudo -u renderer /usr/local/bin/pre_render${2}.py
-        pre_rendering=$?
-        echo "Pre-rendering exited with $pre_rendering"
-        service postgresql stop
-        exit $pre_rendering
-    else
-        echo "Healthcheck failed"
-        echo $tileserver_ok
-        service postgresql stop
-        exit 1
-    fi
+    # Start pre-rendering
+    echo
+    echo "Starting pre-rendering"
+    echo
+    sudo -u renderer /usr/local/bin/pre_render${2}.py
+    pre_rendering=$?
+    echo "Pre-rendering exited with $pre_rendering"
+    service postgresql stop
+    exit $pre_rendering
 
     exit 0
 fi
@@ -95,6 +92,7 @@ fi
 if [ "$1" = "run" ]; then
 
     init_for_rendering
+    init_for_serving
     
     # Start post-rendering as a background job
     sleep 180 && sudo -u renderer /usr/local/bin/post_render.py &
@@ -108,6 +106,7 @@ fi
 if [ "$1" = "run-fresh" ]; then
 
     init_for_rendering
+    init_for_serving
     
     # Clean cache, only needed for Docker named volume 
     rm -rf /var/lib/mod_tile/*
