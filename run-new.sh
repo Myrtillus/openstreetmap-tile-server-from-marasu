@@ -11,6 +11,13 @@ if [ "$#" -lt 1 ]; then
     exit 1
 fi
 
+function init_mod_tile() {
+    # Kubernetes emptydir volume hack for mod_tile
+    touch /var/lib/mod_tile/planet-import-complete
+    chown -R renderer:renderer /var/lib/mod_tile
+    chmod a+r /var/lib/mod_tile/planet-import-complete
+}
+
 if [ "$1" = "import" ]; then
     # Kubernetes emptydir-volume hack
     rm -rf /var/lib/postgresql/10/main
@@ -44,13 +51,6 @@ if [ "$1" = "import" ]; then
 
     exit 0
 fi
-
-function init_mod_tile() {
-    # Kubernetes emptydir volume hack for mod_tile
-    touch /var/lib/mod_tile/planet-import-complete
-    chown -R renderer:renderer /var/lib/mod_tile
-    chmod a+r /var/lib/mod_tile/planet-import-complete
-}
 
 function init_for_serving() {
    # Initialize Apache
