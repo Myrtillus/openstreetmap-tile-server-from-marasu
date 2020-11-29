@@ -55,7 +55,7 @@ fi
 function init_for_serving() {
    # Initialize Apache
     echo "export APACHE_ARGUMENTS='-D ALLOW_CORS'" >> /etc/apache2/envvars
-    service apache2 start
+    service apache2 restart
     #sleep 10
     #service apache2 restart
 }
