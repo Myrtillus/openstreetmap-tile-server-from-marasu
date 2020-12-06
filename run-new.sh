@@ -55,9 +55,14 @@ fi
 function init_for_serving() {
    # Initialize Apache
     echo "export APACHE_ARGUMENTS='-D ALLOW_CORS'" >> /etc/apache2/envvars
-    service apache2 restart
-    #sleep 10
-    #service apache2 restart
+    EXIT_CODE=1
+    while [ $EXIT_CODE -gt 0 ]; do
+        service apache2 restart
+        # loops on error code: greater-than 0
+        sleep 20
+        curl --silent --show-error --fail http://localhost
+        EXIT_CODE=$?
+    done
 }
 
 function init_for_rendering() {
