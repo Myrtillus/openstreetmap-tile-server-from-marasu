@@ -47,7 +47,7 @@ if [ "$1" = "import" ]; then
 
     # Import data
     # Tried using --drop: db size dropped to 1/3 however rendering slowed down dramatically
-    exec sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore -C ${NODEMEM:-2048} --number-processes ${THREADS:-4} -S /home/renderer/src/summer_map/MTB-kartta_full/tk_mtb.style /osm-data/data.osm.pbf
+    exec sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore -C ${NODEMEM:-2048} --number-processes ${THREADS:-4} -S /home/renderer/src/summer_map/tk_mtb.style /osm-data/data.osm.pbf
 
     exit 0
 fi

@@ -153,7 +153,7 @@ USER renderer
 WORKDIR /home/renderer/src
 RUN git clone https://github.com/TapioKn/MTB-kartta_Mapnik_styles.git summer_map
 RUN git clone https://github.com/MaRaSu/pkk_winter_2014.git pkk_winter
-WORKDIR /home/renderer/src/summer_map/MTB-kartta_full
+WORKDIR /home/renderer/src/summer_map
 RUN carto -v
 RUN carto project.mml > mapnik.xml
 WORKDIR /home/renderer/src/pkk_winter
@@ -162,7 +162,7 @@ RUN carto -v
 RUN carto project.mml > mapnik.xml
 
 # Load shapefiles
-WORKDIR /home/renderer/src/summer_map/MTB-kartta_full
+WORKDIR /home/renderer/src/summer_map
 RUN chmod a+x get-shapefiles.sh
 RUN ./get-shapefiles.sh \
  && rm data/*.zip
