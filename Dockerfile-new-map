@@ -151,13 +151,12 @@ USER root
 RUN chown -R renderer:renderer /home/renderer/src
 USER renderer
 WORKDIR /home/renderer/src
-RUN git clone https://github.com/TapioKn/MTB-kartta_Mapnik_styles.git summer_map
-RUN git clone https://github.com/MaRaSu/pkk_winter_2014.git pkk_winter
+RUN git clone https://github.com/TapioKn/MTB-kartta_full.git summer_map
+RUN git clone https://github.com/TapioKn/MTB-kartta_winter.git pkk_winter
 WORKDIR /home/renderer/src/summer_map
 RUN carto -v
 RUN carto project.mml > mapnik.xml
 WORKDIR /home/renderer/src/pkk_winter
-RUN wget -nv https://raw.githubusercontent.com/Myrtillus/osm2pgsql_style/master/pkk_maps.style
 RUN carto -v
 RUN carto project.mml > mapnik.xml
 
@@ -167,9 +166,9 @@ RUN chmod a+x get-shapefiles.sh
 RUN ./get-shapefiles.sh \
  && rm data/*.zip
 WORKDIR /home/renderer/src/pkk_winter
+RUN chmod a+x get-shapefiles.sh
 RUN ./get-shapefiles.sh \
- && rm data/*.zip \
- && rm data/*.tgz
+ && rm data/*.zip
 
 # Copy config files
 USER root
