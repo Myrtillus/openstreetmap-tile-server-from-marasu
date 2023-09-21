@@ -13,8 +13,8 @@ build_new:
 	docker tag registry.finomena.fi/c/openstreetmap-tile-server-new:latest registry.finomena.fi/c/openstreetmap-tile-server:0.7.3
 
 build_new_h:
-	docker build -t registry-h.finomena.fi/openstreetmap-tile-server-new:latest -f Dockerfile-new-map --build-arg NOCACHE=$$(date +%s) .
-	docker tag registry-h.finomena.fi/openstreetmap-tile-server-new:latest registry-h.finomena.fi/openstreetmap-tile-server:0.7.3
+	docker build -t registry-hetzner.finomena.fi/openstreetmap-tile-server-new:latest -f Dockerfile-new-map --build-arg NOCACHE=$$(date +%s) .
+	docker tag registry-hetzner.finomena.fi/openstreetmap-tile-server-new:latest registry-hetzner.finomena.fi/openstreetmap-tile-server:0.7.3
 
 
 push: build
