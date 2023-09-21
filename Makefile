@@ -2,19 +2,19 @@
 
 build: 
 	docker build -t registry.finomena.fi/c/openstreetmap-tile-server:latest --build-arg NOCACHE=$$(date +%s) .
-	docker tag registry.finomena.fi/c/openstreetmap-tile-server:latest registry.finomena.fi/c/openstreetmap-tile-server:0.4.14
+	docker tag registry.finomena.fi/c/openstreetmap-tile-server:latest registry.finomena.fi/c/openstreetmap-tile-server:0.4.15
 
 build_min:
 	docker build -t registry.finomena.fi/c/openstreetmap-tile-server:latest --build-arg NOCACHE=0 .
-	docker tag registry.finomena.fi/c/openstreetmap-tile-server:latest registry.finomena.fi/c/openstreetmap-tile-server:0.4.14
+	docker tag registry.finomena.fi/c/openstreetmap-tile-server:latest registry.finomena.fi/c/openstreetmap-tile-server:0.4.15
 
 build_new:
 	docker build -t registry.finomena.fi/c/openstreetmap-tile-server-new:latest -f Dockerfile-new-map --build-arg NOCACHE=$$(date +%s) .
-	docker tag registry.finomena.fi/c/openstreetmap-tile-server-new:latest registry.finomena.fi/c/openstreetmap-tile-server:0.7.2
+	docker tag registry.finomena.fi/c/openstreetmap-tile-server-new:latest registry.finomena.fi/c/openstreetmap-tile-server:0.7.3
 
 build_new_h:
 	docker build -t registry-h.finomena.fi/openstreetmap-tile-server-new:latest -f Dockerfile-new-map --build-arg NOCACHE=$$(date +%s) .
-	docker tag registry-h.finomena.fi/openstreetmap-tile-server-new:latest registry-h.finomena.fi/openstreetmap-tile-server:0.7.2
+	docker tag registry-h.finomena.fi/openstreetmap-tile-server-new:latest registry-h.finomena.fi/openstreetmap-tile-server:0.7.3
 
 
 push: build
