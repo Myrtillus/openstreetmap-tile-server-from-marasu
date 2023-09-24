@@ -155,6 +155,7 @@ WORKDIR /home/renderer/src
 RUN git clone https://github.com/TapioKn/MTB-kartta_full.git summer_map
 RUN git clone https://github.com/TapioKn/MTB-kartta_winter.git pkk_winter
 RUN git clone https://github.com/TapioKn/MTB-kartta_pathsonly.git paths_only
+RUN git clone https://github.com/TapioKn/MTB-kartta_waysonly.git ways_only
 WORKDIR /home/renderer/src/summer_map
 RUN carto -v
 RUN carto project.mml > mapnik.xml
@@ -162,6 +163,9 @@ WORKDIR /home/renderer/src/pkk_winter
 RUN carto -v
 RUN carto project.mml > mapnik.xml
 WORKDIR /home/renderer/src/paths_only
+RUN carto -v
+RUN carto project.mml > mapnik.xml
+WORKDIR /home/renderer/src/ways_only
 RUN carto -v
 RUN carto project.mml > mapnik.xml
 
@@ -175,6 +179,8 @@ RUN chmod a+x get-shapefiles.sh
 RUN ./get-shapefiles.sh \
  && rm data/*.zip
 WORKDIR /home/renderer/src/paths_only
+RUN ln -s ../summer_map/data .
+WORKDIR /home/renderer/src/ways_only
 RUN ln -s ../summer_map/data .
 
 # Copy config files
